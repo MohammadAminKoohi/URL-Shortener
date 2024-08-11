@@ -1,8 +1,7 @@
 package main
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
+	"encoding/binary"
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -10,10 +9,20 @@ import (
 
 var shortURLs = make(map[string]string)
 
-func generateHash(URL string) string {
-	hash := sha256.New()
-	hash.Write([]byte(URL))
-	return hex.EncodeToString(hash.Sum(nil))[:8]
+const base62Chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+
+func toBase62(url string) string {
+	num := binary.BigEndian.Uint64([]byte(url))
+	if num == 0 {
+		return string(base62Chars[0])
+	}
+	var result []byte
+	for num > 0 {
+		remainder := num % 62
+		result = append([]byte{base62Chars[remainder]}, result...)
+		num = num / 62
+	}
+	return string(result)
 }
 
 func shorten(c echo.Context) error {
@@ -21,7 +30,7 @@ func shorten(c echo.Context) error {
 	if URL == "" {
 		return c.String(http.StatusBadRequest, "URL parameter is required")
 	}
-	shortenedURL := generateHash(URL)
+	shortenedURL := toBase62(URL)
 	shortURLs[shortenedURL] = URL
 	return c.String(http.StatusOK, "Shortened URL: http://localhost:1323/"+shortenedURL)
 }
