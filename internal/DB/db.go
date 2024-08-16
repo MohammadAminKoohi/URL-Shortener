@@ -1,22 +1,29 @@
 package DB
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/redis/go-redis/v9"
 	"log"
 )
 
 const (
-	port     = 5432
-	host     = "localhost"
-	user     = "postgres"
-	password = "Amin1385"
-	dbname   = "urlshortener"
+	DB_PORT     = 5432
+	DB_HOST     = "localhost"
+	DB_USER     = "postgres"
+	DB_PASSWORD = "Amineyk85"
+	DB_NAME     = "urlshortener"
+)
+const (
+	REDIS_PORT     = 6379
+	REDIS_HOST     = "redis"
+	REDIS_PASSWORD = ""
 )
 
 func DbInit() *sql.DB {
-	connStr := fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=disable", user, password, host, port, dbname)
+	connStr := fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=disable", DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME)
 
 	db, err := sql.Open("pgx", connStr)
 	if err != nil {
@@ -37,4 +44,16 @@ func DbInit() *sql.DB {
 	}
 
 	return db
+}
+
+func RedisInit() *redis.Client {
+	client := redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%v:%v", REDIS_HOST, REDIS_PORT),
+		Password: REDIS_PASSWORD,
+	})
+	_, err := client.Ping(context.Background()).Result()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return client
 }

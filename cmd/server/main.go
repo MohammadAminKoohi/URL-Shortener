@@ -11,6 +11,7 @@ func main() {
 	e := echo.New()
 	h := handlers.Handler{
 		Database: DB.DbInit(),
+		Redis:    DB.RedisInit(),
 	}
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello, World!")
