@@ -43,22 +43,23 @@ func (h *Handler) Redirect(c echo.Context) error {
 			if err == sql.ErrNoRows {
 				return c.String(http.StatusNotFound, "URL not found")
 			}
-			fmt.Println("Error querying database: " + err.Error())
 			return c.String(http.StatusInternalServerError, "Error querying database")
 		}
 		_, err = h.Database.Exec(`UPDATE urls SET count = count + 1 WHERE shortened_url = $1`, shortenedURL)
 		if err != nil {
-			fmt.Println("Error updating count in database: " + err.Error())
 			return c.String(http.StatusInternalServerError, "Error updating count in database")
 		}
 		err = h.Redis.Set(c.Request().Context(), shortenedURL, originalURL, 5*time.Minute).Err()
 		if err != nil {
-			fmt.Println("Error setting Redis cache: " + err.Error())
 			return c.String(http.StatusInternalServerError, "Error setting Redis cache")
 		}
 	} else if err != nil {
-		fmt.Println("Error retrieving from Redis: " + err.Error())
 		return c.String(http.StatusInternalServerError, "Error retrieving from Redis")
+	} else {
+		err = h.Redis.Expire(c.Request().Context(), shortenedURL, 5*time.Minute).Err()
+		if err != nil {
+			return c.String(http.StatusInternalServerError, "Error resetting Redis expiration")
+		}
 	}
 	return c.Redirect(http.StatusFound, originalURL)
 }
