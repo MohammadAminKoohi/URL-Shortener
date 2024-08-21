@@ -1,0 +1,46 @@
+version: '3'
+services:
+  app:
+    build: .
+    container_name: urlshortener_app
+    ports:
+      - "1323:1323"
+    depends_on:
+      - db
+      - redis
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: Amineyk85
+      DB_NAME: urlshortener
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: amin
+    networks:
+      - backend
+
+  db:
+    image: postgres:16
+    volumes:
+      - /data/postgres:/data
+    environment:
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: Amineyk85
+        POSTGRES_DB: urlshortener
+    networks:
+        - backend
+  redis:
+    image: redis:7.0.15
+    volumes:
+      - /data/redis:/data
+    command: redis-server --requirepass "amin"
+    environment:
+      REDIS_HOST: redis
+      REDIS_PASSWORD: amin
+    networks:
+        - backend
+
+
+networks:
+    backend:

@@ -7,23 +7,17 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/redis/go-redis/v9"
 	"log"
-)
-
-const (
-	DB_PORT     = 5432
-	DB_HOST     = "localhost"
-	DB_USER     = "postgres"
-	DB_PASSWORD = "Amineyk85"
-	DB_NAME     = "urlshortener"
-)
-const (
-	REDIS_PORT     = 6379
-	REDIS_HOST     = "redis"
-	REDIS_PASSWORD = ""
+	"os"
 )
 
 func DbInit() *sql.DB {
-	connStr := fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=disable", DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME)
+	dbHost := os.Getenv("DB_HOST")
+	dbPort := os.Getenv("DB_PORT")
+	dbUser := os.Getenv("DB_USER")
+	dbPassword := os.Getenv("DB_PASSWORD")
+	dbName := os.Getenv("DB_NAME")
+
+	connStr := fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=disable", dbUser, dbPassword, dbHost, dbPort, dbName)
 
 	db, err := sql.Open("pgx", connStr)
 	if err != nil {
@@ -31,10 +25,10 @@ func DbInit() *sql.DB {
 	}
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS urls (
-    		id SERIAL PRIMARY KEY,
-    		original_url TEXT NOT NULL,
-    		shortened_url TEXT NOT NULL,
-    		count INTEGER DEFAULT 0
+			id SERIAL PRIMARY KEY,
+			original_url TEXT NOT NULL,
+			shortened_url TEXT NOT NULL,
+			count INTEGER DEFAULT 0
 		)
 	`)
 	if err != nil {
@@ -47,9 +41,13 @@ func DbInit() *sql.DB {
 }
 
 func RedisInit() *redis.Client {
+	redisHost := os.Getenv("REDIS_HOST")
+	redisPort := os.Getenv("REDIS_PORT")
+	redisPassword := os.Getenv("REDIS_PASSWORD")
+
 	client := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%v:%v", REDIS_HOST, REDIS_PORT),
-		Password: REDIS_PASSWORD,
+		Addr:     fmt.Sprintf("%v:%v", redisHost, redisPort),
+		Password: redisPassword,
 	})
 	_, err := client.Ping(context.Background()).Result()
 	if err != nil {
