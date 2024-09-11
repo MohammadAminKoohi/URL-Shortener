@@ -17,8 +17,8 @@ type Handler struct {
 }
 
 const (
-	maxKeys = 10000      // Maximum number of keys allowed in the cache
-	keyList = "key_list" // Redis list to track key order
+	maxKeys = 10000
+	keyList = "key_list"
 )
 
 func (h *Handler) Shorten(c echo.Context) error {
